@@ -1,8 +1,3 @@
-using VintageOptimalControl
-using Test
+using SafeTestsets
+@safetestset "Base Tests"  begin include("Testsets.jl") end
 
-@testset "VintageOptimalControl.jl" begin
-
-    #asdasd
-
-end
