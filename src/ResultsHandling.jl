@@ -71,9 +71,9 @@ function PlotResults(Results2::Dict;SavePlot=false,Display=true,sizeX=600,sizeY=
 
     for ii = 1:Para["nTime"]
         for kk = 1:Para["nCon_conc"]
-            if Con_conc[1,ii,kk] >= Para["Con_concMin"][kk]
+            if Con_conc[1,ii,kk] <= Para["Con_concMin"][kk]
                 dHam_conc[1,ii,kk] = max(dHam_conc[1,ii,kk],0)
-            elseif Con_conc[1,ii,kk] <= Para["Con_concMax"][kk]
+            elseif Con_conc[1,ii,kk] >= Para["Con_concMax"][kk]
                 dHam_conc[1,ii,kk] = min(dHam_conc[1,ii,kk],0)
             end
         end

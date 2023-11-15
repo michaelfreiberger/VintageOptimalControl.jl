@@ -291,7 +291,8 @@ function ConInterpol(Con_conc::Array{Float64,3},Con_dist::Array{Float64,3},Para:
         Con_dist_new[:,:,kk] .= [itp(a,t) for a in Para["amesh"], t in Para["tmesh"]]
 
         if nAge_old == (Para["nVintage"]+1)/2
-            
+
+
             for ii = 1:2:Para["nVintage"]-1
                 ii2 = round(Int,(ii+1)/2)
                 itp = LinearInterpolation(amesh_old[ii2:end],diag(Con_dist[ii2:end,1:nAge_old-ii2+1,kk]))
@@ -300,10 +301,13 @@ function ConInterpol(Con_conc::Array{Float64,3},Con_dist::Array{Float64,3},Para:
                 end
             end
             
-            for ii = 1:1:Para["nVintage"]-2
-                Con_dist_new[ii+1,ii,kk] = Con_dist_new[ii+2,ii,kk]
+            for ii = 1:Para["nVintage"]-3
+                Con_dist_new[ii+1,ii,kk] = Con_dist_new[ii+2,ii,kk] + Con_dist_new[ii+2,ii,kk] - Con_dist_new[ii+3,ii,kk]
             end
-            Con_dist_new[Para["nVintage"],Para["nVintage"]-1,kk] = Con_dist_new[Para["nVintage"],Para["nVintage"]-2,kk]
+            Con_dist_new[Para["nVintage"]-1,Para["nVintage"]-2,kk] = Con_dist_new[Para["nVintage"]-1,Para["nVintage"]-3,kk] + Con_dist_new[Para["nVintage"]-1,Para["nVintage"]-3,kk] - Con_dist_new[Para["nVintage"]-1,Para["nVintage"]-4,kk]
+            Con_dist_new[Para["nVintage"],Para["nVintage"]-1,kk] = Con_dist_new[Para["nVintage"],Para["nVintage"]-2,kk] + Con_dist_new[Para["nVintage"],Para["nVintage"]-2,kk] - Con_dist_new[Para["nVintage"],Para["nVintage"]-3,kk]
+   
+   
             # itp = LinearInterpolation(Para["amesh"][2:2:Para["nVintage"]-1],diag(Con_dist_new[2:2:Para["nVintage"]-1,1:2:Para["nVintage"]-2,kk]))
             # for ii = 2:2:Para["nVintage"]-3
             #     Con_dist_new[ii+1,ii,kk] = itp(Para["amesh"][ii+1])

@@ -2,7 +2,7 @@
 
 [![Build Status](https://github.com/michaelfreiberger/VintageOptimalControl.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/michaelfreiberger/VintageOptimalControl.jl/actions/workflows/CI.yml?query=branch%3Amain)
 
-This is a Julia-package which allows for the solution of vintage-structured/age-structured optimal control problems.
+This is a Julia-package which allows for the solution of age-structured/vintage-structured optimal control problems.
 
 # Installation
 
@@ -19,58 +19,61 @@ For information on how to use the toolbox and some examples, please take a look 
 
 # Problem class
 
-This package is designed to solve problems of the form
+This package is designed to solve age-structured problems of the form
 
 $$ 
-\max_{C_2: [0,T]\to\mathbb{R}^{n_1},\quad C_2:[0,T]^2\to\mathbb{R}^{n_2}}\int_{0}^{T}\int_{0}^{\omega} \exp(-\rho t)\Big[F(t,s,C_1(t),S_1(t)) + Q(t) \Big]dt +
+\max_{u: [0,T]\to\mathbb{R}^{n_u},\; v:[0,T]\times[0,\omega]\to\mathbb{R}^{n_v}}\int_{0}^{T}\int_{0}^{\omega} \exp(-\rho t)\cdot J\Big(X(t),Y(t,a),Z(t),u(t),v(t,a),t,a\Big) da dt + \int_0^{\omega} S(X(T),Y(T,a),Z(T),T,a)da
 $$
 
 $$
-\hspace{4cm} + D_1(S(T)) + \int_0^T D_2(S_2(T,s))ds
+s.t. \hspace{2cm}\dot{X}(t) = f(X(t),Z(t),u(t),t) ,\hspace{3cm} X(0) = X_0
 $$
 
 $$
-s.t. \qquad\dot{S_1}(t) = g_1(t,C_1(t),S_1(t)) ,\hspace{2cm} S_1(0) = S_1^0
+\hspace{3.8cm} \Big(\frac{\partial}{\partial t}+\frac{\partial}{\partial a}\Big) Y(t,a) = g(X(t),Y(t,a),Z(t),u(t),v(t,a),t,a) ,\qquad Y(t,0) = y_0(X(t),Z(t),u(t),t)
 $$
 
 $$
-\hspace{3cm} \frac{d}{dt} S_2(t,s) = g_2(t,s,C_2(t,s),S_2(t,s)) ,\qquad S_2(s,s) = h(s,C_1(s),S_1(s))
+\hspace{0.5cm} Z(t) = \int_0^{\omega} h(X(t),Y(t,a),u(t),v(t,a),t,a) da
 $$
 
 $$
-\qquad \qquad Q(t) = \int_0^t F_2(t,s,C_2(t,s),S_2(t,s)) ds
+\underline{u_i} \leq u_i(t) \leq \overline{u_i} \qquad\forall i = 1,\ldots,n_u \quad,\quad\forall t\in [0,T]
 $$
 
 $$
-\underline{C_1}(i) \leq C_{1,i}(t) \leq \overline{C_1}(i) \qquad\forall i = 1,\ldots,n_1 \quad,\quad\forall t\in [0,T]
+\hspace{2.6cm}\underline{v_i} \leq v_i(t,a) \leq \overline{v_i} \qquad\forall i = 1,\ldots,n_v \quad,\quad\forall t\in [0,T]\quad,\quad \forall s\in [0,\omega]
 $$
 
-$$
-\underline{C_2}(i) \leq C_{2,i}(t,s) \leq \overline{C_2}(i) \qquad\forall i = 1,\ldots,n_2 \quad,\quad\forall s\in [0,T]\quad,\quad\forall t\in [s,T]
-$$
+A vintage-structured optimal control problem can be easily transformed into a vintage-structured optimal control problem considering the relationship
 
+$$
+    s = t-a
+$$
+between vintage $s$, time $t$, and age $a$.
 
 ## **Variable and function explanations**
 
 The model consist of three different types of variables:
 
-* concentrated state and control variables (depending on time $t$)
-* distributed state and control variables (depending on time $t$ and vintage $s$)
-* aggregated state variables (depending on time $t$)
+* concentrated state variables $X$ and control variables $u$ (depending on time $t$)
+* distributed state variables $Y$ and control variables $v$ (depending on time $t$ and age $a$)
+* aggregated state variables $Z$ (depending on time $t$)
 
 ### Concentrated variables
 
-The concentrated variables consist of the $n_1$-dimensional control variable $C_1$ and the $m_1$-dimensional state variable $S_1$. The initial value of $S_1$ is given by $S_1^0$ and its dynamics are affected by $C_1$. Furthermore $C_1$ also affects the initial values of the distributed variables (see below).
+The concentrated variables consist of the $n_u$-dimensional control variable $u$ and the $n_X$-dimensional state variable $X$. The initial value of $X$ is given by $X_0$ and its dynamics are affected by $X$, $Z$, and $u$. Furthermore $X$ and $u$ also affect the initial values of the distributed variables $Y$ (see below), the dynamics of $Y$ and the aggregated variables $Z$.
 
 ### Distributed variables
 
-Analogous to the concentrated variables, the distributed variables consist of the $n_2$-dimensional control variable $C_2$ and the $m_2$-dimensional state variable $S_2$. The strictly speaking partial differential equation can be solved along the characteristic lines with fixed vintage $s=\overline{s}$. While the dynamics of $S_2$ are again affected by the distributed controls $C_2$, the initial values of $S_2$ at the beginning of each vintage $s$ are determined by the value of the concentrated state $S_1$ at time $s$ and the concentrated control $C_1$.
+Analogous to the concentrated variables, the distributed variables consist of the $n_v$-dimensional control variable $v$ and the $n_Y$-dimensional state variable $Y$. The (strictly speaking partial) differential equation can be solved along the characteristic lines with fixed vintage $t-a(=s)=const$ . While the dynamics of $Y$ are affected by the distributed controls,states as well as the concentrated states and controls and aggregated states. The initial values of $Y$ for age $0$ at each time $t$ are determined by the value of the concentrated state $Z$ at time $t$, the concentrated control $u$, and the aggregated variable $Z$.
 
 ### Aggregated variables
 
-Finally we also have an aggregated variable $Q$ which aggregates at each point in time $t$ a functional form $F_2$ over all vintages which startet before $t$. 
+The aggregated variable $Z$ at each point in time is defined through the aggregation over all ages. The function $h()$ captures how the concentrated and distributed variables are aggregated.
 
-## **Algorithm principles**
+
+## **Algorithmic principles**
 
 The algorithm uses a gradient based approach following a sequence of steps:
 
@@ -81,49 +84,3 @@ The algorithm uses a gradient based approach following a sequence of steps:
 5. Find the optimal adjustment step in the direction of the gradient.
 6. Define new currently best solution.
 7. Iterate from step 2 until no improvement can be found anymore.
-
-## **Two-stage optimal control problems with random switching time**
-
-This package is based on a project about the solution of two-stage optimal control problems with random switching time. This problem class takes the following form:
-
-$$ 
-\max_{C_1: [0,T]\to\mathbb{R}^{n_1}}\mathbb{E}_{\tau}\int_{0}^{\tau} \exp(-\rho t) F_1(t,C_1(t),S_1(t)) dt + \exp(-\rho\tau)V^*(\tau,C_1(\tau),S_1(\tau))
-$$
-
-$$
-s.t. \qquad\dot{S_1}(t) = g_1(t,C_1(t),S_1(t)) ,\hspace{2cm} S_1(0) = S_1^0
-$$
-
-$$
-\underline{C_1}(i) \leq C_{1,i}(t) \leq \overline{C_1}(i) \qquad\forall i = 1,\ldots,n_1
-$$
-
-with $V^*(\tau,S_1(\tau))$ being the value-function of the second stage problem
-
-$$
-V^*(\tau,S_1(\tau)) = \max_{C_2:[\tau,T]\to\mathbb{R}^{n_2}}\int_{\tau}^T \exp(-\rho(t-\tau))F_2(t,\tau,C_2(t),S_2(t)) dt
-$$
-
-$$
-\hspace{3cm} \dot{S_2}(t) = g_2(t,\tau,C_2(t),S_2(t)) ,\qquad S_2(\tau) = h(\tau,C_1(\tau),S_1(\tau))
-$$
-
-$$
-\underline{C_2}(i) \leq C_{2,i}(t) \leq \overline{C_2}(i) \qquad\forall i = 1,\ldots,n_2 \quad,\quad\forall t\in [\tau,T]
-$$
-
-and $\tau$ being the random switching time between the two stages with the stochastic properties being best described by the $Z(t):= \mathbb{P}\left[\tau > t\right]$, the probability of surviving in the first stage. The hazard rate $\eta$ of $Z$ thereby can depend on time $t$ the state variables $S_1$ and the control variablee $C_1$.
-
-$$
-\dot{Z}(t) = -\eta(t,C_1,S_1)\cdot Z(t)
-$$
-
-Overall this problem type can be transformed into a vintage-structed optimal control problem presented above. For details see the work of [Wrzaczek, Kuhn and Frankovic (2020)](https://link.springer.com/article/10.1007/s10957-019-01598-5).
-
-# Planned extensions of the toolbox
-
-### 1. Generalise to the age-structured optimal control problems with initial distribution of state variables, intial and boundary controls, and more generalised version of aggregated variables.
-
-### 2. Allow for more general/complicated feasible regions for the control variables.
-
-### 3. Include the option to define equilibrium conditions, which the solution has to fulfill.

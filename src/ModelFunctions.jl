@@ -25,7 +25,7 @@ function ObjectValue(Stat_conc::Array{Float64,3},
                                             Con_conc[1,ii,:] ,Con_dist[jj,ii,:],            
                                             Para["tmesh"][ii],Para["amesh"][jj],Para)
         end
-        F[ii] = Integral(Para["nVintage"],Para["hstep"],Fhelp)
+        F[ii] = exp(-Para["TimeDiscountRate"]*Para["tmesh"][ii])*Integral(Para["nVintage"],Para["hstep"],Fhelp)
     end
 
     FSalv = zeros(Para["nVintage"])
@@ -186,8 +186,10 @@ function Hamiltonian(Stat_conc,
     else
         Stat_dist_term = 0.0
     end
+    
+    #exp(-Para["TimeDiscountRate"]*t)*
 
-    return exp(-Para["TimeDiscountRate"]*t)*ObjectiveIntegrand(Stat_conc,Stat_dist,Stat_agg,Con_conc,Con_dist,t,s,Para) + 
+    return ObjectiveIntegrand(Stat_conc,Stat_dist,Stat_agg,Con_conc,Con_dist,t,s,Para) + 
             + Stat_conc_term + Stat_dist_term + Stat_agg_term
 
     # return ObjectiveIntegrand(Stat_conc,Stat_dist,Stat_agg,Con_conc,Con_dist,t,s,Para) + 
@@ -419,18 +421,18 @@ function NewDirection(Stat_conc::Array{Float64,3},
         dHam_dist .= dHam_dist
     elseif Para["OptiType"] == "Newton-Raphson"
         if Para["nCon_dist"] > 0
-            Hessian(ii,jj) = ForwardDiff.hessian(X->Hamiltonian(Stat_conc[1,ii,:], Stat_dist[jj,ii,:], Stat_agg[1,ii,:], Con_conc[1,ii,:], X, 
+            HessianDist(ii,jj) = ForwardDiff.hessian(X->Hamiltonian(Stat_conc[1,ii,:], Stat_dist[jj,ii,:], Stat_agg[1,ii,:], Con_conc[1,ii,:], X, 
                                                         CoStat_conc[1,ii,:],CoStat_dist[jj,ii,:],CoStat_agg[1,ii,:], Para["tmesh"][ii],Para["amesh"][jj],Para),Con_dist[jj,ii,:])
             for jj = 1:Para["nVintage"]
                 for ii = 1:Para["nTime"]
-                    if abs(det(Hessian(ii,jj))) > 1e-9
-                        dHam_dist[jj,ii,:] .= - inv(Hessian(ii,jj))*dHam_dist[jj,ii,:] 
+                    if abs(det(HessianDist(ii,jj))) > 1e-9
+                        dHam_dist[jj,ii,:] .= - inv(HessianDist(ii,jj))*dHam_dist[jj,ii,:] 
                     end                    
                 end
             end
         end
         if Para["nCon_conc"] > 0
-            Hessian = function(ii)
+            HessianConc = function(ii)
                 Hess = zeros(Para["nVintage"],Para["nCon_conc"],Para["nCon_conc"])
                 for jj = 1:Para["nVintage"]
                     Hess[jj,:,:] = ForwardDiff.hessian(X->Hamiltonian(Stat_conc[1,ii,:], Stat_dist[jj,ii,:], Stat_agg[1,ii,:], X, Con_dist[jj,ii,:], 
@@ -443,10 +445,11 @@ function NewDirection(Stat_conc::Array{Float64,3},
                         Hess2[kk1,kk2] = Hess2[kk1,kk2] + Integral(Para["nVintage"],Para["hstep"],Hess[:,kk1,kk2])
                     end
                 end
+                return Hess2
             end
             
             for ii = 1:Para["nTime"]
-                Hess = Hessian(ii)
+                Hess = HessianConc(ii)
                 if abs(det(Hess)) > 1e-9
                     dHam_conc[1,ii,:] .= -inv(Hess)*dHam_conc[1,ii,:]
                 end

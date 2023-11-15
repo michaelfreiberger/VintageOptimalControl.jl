@@ -117,7 +117,7 @@ function VintageOptimisation(;Results=Dict(),UserParameters=Dict(),
         if all(in.(["Con_conc", "Con_dist"],(keys(Results),)))
             Con_conc, Con_dist = LoadVariables(Para,Results)
         else
-            println("Warning: Initial Values cannot be loaded. Con and/or Con_dist are not elemet of the dictionary.")
+            println("Warning: Initial Values cannot be loaded. Con_conc and/or Con_dist are not elemet of the dictionary.")
         end
     end
 
@@ -131,6 +131,9 @@ function VintageOptimisation(;Results=Dict(),UserParameters=Dict(),
         StopOuterIteration = 0
     else
         StopOuterIteration = 1
+        ParaAdjust(Para["hstep"],Para)
+        # Interpolate controls after hstep reduction
+        Con_conc, Con_dist = ConInterpol(Con_conc,Con_dist,Para)
     end
     while StopOuterIteration == 0
 
