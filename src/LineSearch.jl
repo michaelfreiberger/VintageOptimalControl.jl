@@ -75,9 +75,9 @@ function LineSearch(Stat_conc::Array{Float64,3},
                                                                 Con_conc_best, Con_dist_best)
 
             Step = (1+step_increase)*Step
-            x2 = Step
             ObjValue_new, Step = Update(Con_conc, Con_dist, Dir_u_conc, Dir_u_dist, Step, Para,
                                         Stat_conc_new, Stat_dist_new, Stat_agg_new, Con_conc_new, Con_dist_new)
+            x2 = Step
             y2 = ObjValue_new
 
             z = x1*(y2-y0) - x2*(y1-y0)
@@ -140,7 +140,6 @@ function LineSearch(Stat_conc::Array{Float64,3},
                 # Curve is concave --> stepsize for maximum of quadratic approximation
                 z = x2*(y1-y0) - x1*(y2-y0)
                 st = ( x2^2*(y1-y0) -x1^2*(y2-y0) ) / ( 2*z )
-                
                 # New controls + new states + new objective function()
                 ObjValue_new, st = Update(Con_conc, Con_dist, Dir_u_conc, Dir_u_dist, st, Para,
                                             Stat_conc_new, Stat_dist_new, Stat_agg_new, Con_conc_new, Con_dist_new)
@@ -152,7 +151,7 @@ function LineSearch(Stat_conc::Array{Float64,3},
                                                             Stat_conc_best, Stat_dist_best, Stat_agg_best, 
                                                             Con_conc_best, Con_dist_best)
                 end
-            elseif y2 > 0.5*(y0+y1)     # && y2 < (3*y0+y1)/4
+            elseif y2 > (3*y0+y1)/4 #y2 > 0.5*(y0+y1)  #&& y2 < (3*y0+y1)/4
                 z = x2*(y1-y0) - x1*(y2-y0)
                 st = ( x2^2*(y1-y0) -x1^2*(y2-y0) ) / ( 2*z )
                 if st > 0

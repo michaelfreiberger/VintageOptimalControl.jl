@@ -169,7 +169,7 @@ function ParametersAlgorithm(Para,UserPara)
     # Initial stepsize for linesearch
     Para2["InitLineStep"] = 1e-6          
     # Factor for increase in the linesearch stepsize
-    Para2["LineSearchStepIncrease"] = 0.25
+    Para2["LineSearchStepIncrease"] = 0.5
     # Upper bound for linesearch stepsize
     Para2["UpperLineStep"] = 1e1        
     # Upper bound for linesearch stepsize in one iteration. Is adjusted every step
@@ -177,7 +177,7 @@ function ParametersAlgorithm(Para,UserPara)
     # Factor for the upper bound for linesearch stepsize in one iteration.
     Para2["UpperLineStepTemporaryFactor"] = 1e2
     # Lower bound for step in gradient search -> termination if undercut
-    Para2["stepLowBound"] = 1e-8   
+    Para2["stepLowBound"] = 1e-12   
     # Lower bound for the gradient -> termination if undercut
     Para2["GradBound"] = 1e-6
     # Max iterations with same step-size h

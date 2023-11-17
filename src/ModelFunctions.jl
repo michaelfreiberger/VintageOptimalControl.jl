@@ -33,7 +33,7 @@ function ObjectValue(Stat_conc::Array{Float64,3},
         FSalv[jj] = SalvageFunction(Stat_conc[1,end,:],Stat_dist[jj,end,:],Para["tmesh"][end],Para["amesh"][jj],Para)
     end
     
-    VV = Integral(Para["nTime"],Para["hstep"],F) + Integral(Para["nVintage"],Para["hstep"],FSalv)
+    VV = Integral(Para["nTime"],Para["hstep"],F) + exp(-Para["TimeDiscountRate"]*Para["T"])*Integral(Para["nVintage"],Para["hstep"],FSalv)
     return VV
 end
 
@@ -229,7 +229,7 @@ function f_ODE_conc_co(Stat_conc::Array{Float64,3},
     
     F = zeros(Para["nVintage"],Para["nStat_conc"])
     for jj = 1:Para["nVintage"]
-        F[ii,:] = ForwardDiff.gradient(X->Hamiltonian(X, Stat_dist[jj,tt,:], Stat_agg[1,tt,:], Con_conc[1,tt,:], Con_dist[jj,tt,:], 
+        F[jj,:] = ForwardDiff.gradient(X->Hamiltonian(X, Stat_dist[jj,tt,:], Stat_agg[1,tt,:], Con_conc[1,tt,:], Con_dist[jj,tt,:], 
                                                         CoStat_conc[1,tt,:],CoStat_dist[jj,tt,:],CoStat_agg[1,tt,:], Para["tmesh"][tt],Para["amesh"][jj],Para),
                                                      Stat_conc[1,tt,:])
     end   

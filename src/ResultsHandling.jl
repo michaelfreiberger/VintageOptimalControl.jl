@@ -255,13 +255,13 @@ function PlotResults(Results2::Dict;SavePlot=false,Display=true,sizeX=600,sizeY=
 
         for k=1:Para["nCon_dist"]
             display(plot(PLOTS[string("ControlsDist",k)],PLOTS[string("GradDist",k)],layout = grid(2, 1, heights=[0.5 ,0.5]),size=[sizeX,sizeY*2]))
-            display(plot(PLOTS[string("ControlsDist",k,"_V2")],PLOTS[string("GradDist",k,"_V2")],layout = grid(2, 1, heights=[0.5 ,0.5]),size=[sizeX,sizeY*2]))
+            #display(plot(PLOTS[string("ControlsDist",k,"_V2")],PLOTS[string("GradDist",k,"_V2")],layout = grid(2, 1, heights=[0.5 ,0.5]),size=[sizeX,sizeY*2]))
             display(plot(PLOTS[string("ControlsDist",k,"_V3")],PLOTS[string("GradDist",k,"_V3")],layout = grid(2, 1, heights=[0.5 ,0.5]),size=[sizeX,sizeY*2]))
         end
         for k=1:Para["nStat_dist"]
-           display(plot(PLOTS[string("StatDist",k)],PLOTS[string("CoStatDist",k)],layout = grid(2, 1, heights=[0.5 ,0.5]),size=[sizeX,sizeY*2]))
-           display(plot(PLOTS[string("StatDist",k,"_V2")],PLOTS[string("CoStatDist",k,"_V2")],layout = grid(2, 1, heights=[0.5 ,0.5]),size=[sizeX,sizeY*2]))
-           display(plot(PLOTS[string("StatDist",k,"_V3")],PLOTS[string("CoStatDist",k,"_V3")],layout = grid(2, 1, heights=[0.5 ,0.5]),size=[sizeX,sizeY*2]))
+            display(plot(PLOTS[string("StatDist",k)],PLOTS[string("CoStatDist",k)],layout = grid(2, 1, heights=[0.5 ,0.5]),size=[sizeX,sizeY*2]))
+            #display(plot(PLOTS[string("StatDist",k,"_V2")],PLOTS[string("CoStatDist",k,"_V2")],layout = grid(2, 1, heights=[0.5 ,0.5]),size=[sizeX,sizeY*2]))
+            display(plot(PLOTS[string("StatDist",k,"_V3")],PLOTS[string("CoStatDist",k,"_V3")],layout = grid(2, 1, heights=[0.5 ,0.5]),size=[sizeX,sizeY*2]))
         end
     end
     return PLOTS
