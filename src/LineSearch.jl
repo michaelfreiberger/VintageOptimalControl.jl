@@ -236,6 +236,60 @@ function Update(Con_conc::Array{Float64,3},
 end
 
 """
+Update2(Con_conc::Array{Float64,3},
+        Con_dist::Array{Float64,3},
+        Dir_u_conc::Array{Float64,3},
+        Dir_u_dist::Array{Float64,3},
+        Step,
+        Para::Dict,
+        Stat_conc_new::Array{Float64,3},
+        Stat_dist_new::Array{Float64,3}, 
+        Stat_agg_new::Array{Float64,3},
+        Con_conc_new::Array{Float64,3},
+        Con_dist_new::Array{Float64,3})
+
+Update calculates the new values for Controls `Con_new`, States `Stat_new` and Objectiv value given start values for the Controls `Con`, the search direction `Dir_u` and the step-size in the direction `step`
+"""
+function Update2(Con_conc::Array{Float64,3},
+                Con_dist::Array{Float64,3},
+                dHam_conc::Array{Float64,3},
+                dHam_dist::Array{Float64,3},
+                Step,
+                Para::Dict,
+                Stat_conc_new::Array{Float64,3},
+                Stat_dist_new::Array{Float64,3}, 
+                Stat_agg_new::Array{Float64,3},
+                Con_conc_new::Array{Float64,3},
+                Con_dist_new::Array{Float64,3},
+                dHam_conc_new::Array{Float64,3},
+                dHam_dist_new::Array{Float64,3},
+                CoStat_conc_new::Array{Float64,3},
+                CoStat_dist_new::Array{Float64,3},
+                CoStat_agg_new::Array{Float64,3}
+                )
+
+    Step = min(Step,Para["UpperLineStep"],Para["UpperLineStepTemporary"])
+
+    Con_conc_new .= Con_conc + Step*dHam_conc
+    Con_dist_new .= Con_dist + Step*dHam_dist
+    ConMapping_conc(Con_conc_new,Para)
+    ConMapping_dist(Con_dist_new,Para)
+    
+    state_PDE_solver(Stat_conc_new,Stat_dist_new,Stat_agg_new,Con_conc_new,Con_dist_new,Para)
+    ObjValue_new = ObjectValue( Stat_conc_new, Stat_dist_new, Stat_agg_new, Con_conc_new,Con_dist_new, Para)
+    costate_PDE_solver(Stat_conc_new,Stat_dist_new,Stat_agg_new,Con_conc_new,Con_dist_new,CoStat_conc_new,CoStat_dist_new,CoStat_agg_new,Para)
+    GradHamiltonian(Stat_conc_new,Stat_dist_new,Stat_agg_new,Con_conc_new,Con_dist_new,CoStat_conc_new,CoStat_dist_new,CoStat_agg_new,dHam_conc_new,dHam_dist_new,Para)
+    MaxGradient = maxabsGradient(Con_conc_new,Con_dist_new,dHam_conc_new,dHam_dist_new,Para)
+    NewDirection(Stat_conc_new,Stat_dist_new,Stat_agg_new,
+                 Con_conc_new,Con_dist_new,
+                 CoStat_conc_new,CoStat_dist_new,CoStat_agg_new,
+                 dHam_conc_new,dHam_dist_new,Para)
+
+    return ObjValue_new, Step, MaxGradient
+end
+
+
+"""
 AssignBest(ObjValue::Float64,
             Stat_conc::Array{Float64,3},
             Stat_dist::Array{Float64,3}, 
@@ -273,6 +327,21 @@ function AssignBest(ObjValue::Float64,
     return ObjValue, step
 end
 
+function AssignBest2(Con_conc::Array{Float64,3},
+                    Con_dist::Array{Float64,3},
+                    dHam_conc::Array{Float64,3},
+                    dHam_dist::Array{Float64,3},
+                    Con_conc_best::Array{Float64,3},
+                    Con_dist_best::Array{Float64,3},
+                    dHam_conc_best::Array{Float64,3},
+                    dHam_dist_best::Array{Float64,3})
+
+    Con_conc_best .= Con_conc
+    Con_dist_best .= Con_dist
+
+    dHam_conc_best .= dHam_conc
+    dHam_dist_best .= dHam_dist
+end
 
 """
 maxabsGradient(Con_conc::Array{Float64,3},
@@ -293,7 +362,9 @@ function maxabsGradient(Con_conc::Array{Float64,3},
     
     for ii = 1:Para["nTime"]
         for kk = 1:Para["nCon_conc"]
-            if Con_conc[1,ii,kk] >= Para["Con_concMin"][kk]
+            if Con_conc[1,ii,kk] >= Para["Con_concMin"][kk] && Con_conc[1,ii,kk] <= Para["Con_concMax"][kk]
+                dHam_conc_abs[1,ii,kk] = 0.0
+            elseif Con_conc[1,ii,kk] >= Para["Con_concMin"][kk]
                 dHam_conc_abs[1,ii,kk] = abs(max(dHam_conc[1,ii,kk],0))
             elseif Con_conc[1,ii,kk] <= Para["Con_concMax"][kk]
                 dHam_conc_abs[1,ii,kk] = abs(min(dHam_conc[1,ii,kk],0))
@@ -306,7 +377,9 @@ function maxabsGradient(Con_conc::Array{Float64,3},
     for ii = 1:Para["nTime"]
         for jj = 1:Para["nVintage"]
             for kk = 1:Para["nCon_dist"]
-                if Con_dist[jj,ii,kk] <= Para["Con_distMin"][kk]
+                if Con_dist[jj,ii,kk] <= Para["Con_distMin"][kk] && Con_dist[jj,ii,kk] >= Para["Con_distMax"][kk]
+                    dHam_dist_abs[jj,ii,kk] = 0.0
+                elseif Con_dist[jj,ii,kk] <= Para["Con_distMin"][kk]
                     dHam_dist_abs[jj,ii,kk] = abs(max(dHam_dist[jj,ii,kk],0))
                 elseif Con_dist[jj,ii,kk] >= Para["Con_distMax"][kk]
                     dHam_dist_abs[jj,ii,kk] = abs(min(dHam_dist[jj,ii,kk],0))
@@ -329,4 +402,54 @@ function maxabsGradient(Con_conc::Array{Float64,3},
     end
 
     return max(dHam_conc_absValue,dHam_dist_absValue)
+end
+
+
+
+function GradientSteps( Con_conc::Array{Float64,3}, 
+                        Con_dist::Array{Float64,3},  
+                        dHam_conc::Array{Float64,3}, 
+                        dHam_dist::Array{Float64,3},
+                        Para::Dict,)
+
+    MaxGradient = 1.0
+    Step = Para["GradientSteps"]
+
+    Stat_conc_new = zeros(1,Para["nTime"],Para["nStat_conc"])
+    Stat_dist_new = zeros(Para["nVintage"],Para["nTime"],Para["nStat_dist"])
+    Stat_agg_new = zeros(1,Para["nTime"],Para["nStat_agg"])
+    Con_conc_new = similar(Con_conc)
+    Con_dist_new = similar(Con_dist)
+    dHam_conc_new = similar(dHam_conc)
+    dHam_dist_new = similar(dHam_dist)
+    CoStat_conc_new = similar(Stat_conc_new)
+    CoStat_dist_new = similar(Stat_dist_new)
+    CoStat_agg_new = similar(Stat_agg_new)
+
+    ObjValue_new, Step, MaxGradientOld =  Update2(Con_conc,Con_dist,dHam_conc,dHam_dist,
+                                                  Step,Para,
+                                                  Stat_conc_new,Stat_dist_new,Stat_agg_new,
+                                                  Con_conc_new,Con_dist_new,dHam_conc_new,dHam_dist_new,
+                                                  CoStat_conc_new,CoStat_dist_new,CoStat_agg_new)
+    AssignBest2(Con_conc_new, Con_dist_new, dHam_conc_new, dHam_dist_new,
+                Con_conc, Con_dist,dHam_conc,dHam_dist)
+
+    while MaxGradient > Para["GradBound"] && Step > Para["stepLowBound"]
+
+        ObjValue_new, Step, MaxGradient =  Update2(Con_conc,Con_dist,dHam_conc,dHam_dist,
+                                                   Step,Para,
+                                                   Stat_conc_new,Stat_dist_new,Stat_agg_new,
+                                                   Con_conc_new,Con_dist_new,dHam_conc_new,dHam_dist_new,
+                                                   CoStat_conc_new,CoStat_dist_new,CoStat_agg_new)
+        if MaxGradient > MaxGradientOld
+            Step = Step/2
+            @printf("Step = %g \n",Step)
+        else
+            MaxGradientOld = MaxGradient
+            AssignBest2(Con_conc_new, Con_dist_new, dHam_conc_new, dHam_dist_new,
+                        Con_conc, Con_dist,dHam_conc,dHam_dist)
+            Step = 1.05*Step
+            @printf("Step = %g | MaxGradient = %g | ObjectiveValueNew = %g\n",Step,MaxGradient,ObjValue_new)
+        end
+    end
 end

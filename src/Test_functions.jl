@@ -1,3 +1,27 @@
+using BenchmarkTools
+using ColorSchemes
+using Coverage
+using Dierckx
+using ForwardDiff
+using Interpolations
+using LaTeXStrings
+using LinearAlgebra
+using Plots
+using Printf
+using Profile
+using Serialization
+using JLD2
+using FileIO
+
+
+include("AuxiliaryFunction.jl")
+include("LineSearch.jl")
+include("MainFunction.jl")
+include("ModelFunctions.jl")
+include("ParametersVariablesSettings.jl")
+include("ResultsHandling.jl")
+include("StateSolvers.jl")
+
 
 # ObjectiveIntegrand_Input(Sconc,Sdist,Sagg,Cconc,Cdist,t,s,Para) = Para["Utility"](Sagg[1]*1/Para["ω"]*(1-Cconc[1]))
 # AggregationIntegrand_Input(Sconc,Sdist,Cconc,Cdist, t::Float64,s::Float64, Para::Dict) = [(Sdist[1]+1e-2)^Para["α"]*Para["A"](s)]
@@ -27,7 +51,8 @@ MyPara["nStat_conc"] = 0
 MyPara["nStat_dist"] = 1
 MyPara["nStat_agg"] = 1
 
-MyPara["InitLineStep"] = 1e-5
+MyPara["InitLineStep"] = 1e-7
+MyPara["stepLowBound"] = 1e-12
 #MyPara["LineSearchStepIncrease"] = 0.25
 #MyPara["UpperLineStep"] = 1e-1
 #MyPara["UpperLineStepTemporaryFactor"] = 1.5
@@ -37,9 +62,9 @@ MyPara["PlotResultsWaitForKey"] = false
 
 MyPara["InitStat_dist"] = [1.0,1.0]
 MyPara["Con_concMin"] = [0.0]
-MyPara["Con_concMax"] = [0.0]
+MyPara["Con_concMax"] = [Inf]
 MyPara["Con_distMin"] = [0.0]
-MyPara["Con_distMax"] = [Inf]
+MyPara["Con_distMax"] = [0.0]
 
 MyPara["ConSmooth"] = false
 
@@ -60,8 +85,8 @@ MyPara["c"] = (a) -> 1.2*exp(-a/10)
 
 MyPara["LoadInits"] = true
 Results = Dict()
-Results["Con_conc"] = 7.0*ones(1,20,MyPara["nCon_conc"])
-Results["Con_dist"] = 0.4*ones(10,20,MyPara["nCon_dist"])
+Results["Con_conc"] = 5.0*ones(1,20,MyPara["nCon_conc"])
+Results["Con_dist"] = 1.0*ones(10,20,MyPara["nCon_dist"])
 
 
 UserParameters = MyPara

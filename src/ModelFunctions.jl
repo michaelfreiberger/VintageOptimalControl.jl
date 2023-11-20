@@ -234,8 +234,12 @@ function f_ODE_conc_co(Stat_conc::Array{Float64,3},
                                                      Stat_conc[1,tt,:])
     end   
             
-    Dt .= -ForwardDiff.gradient(X -> dot(CoStat_dist[1,tt,:],InitDist(X,Stat_agg[1,tt,:],Con_conc[1,tt,:],Para["tmesh"][tt],Para)),
-                                    Stat_conc[1,tt,:])
+    if Para["nStat_dist"] > 0
+        Dt .= -ForwardDiff.gradient(X -> dot(CoStat_dist[1,tt,:],InitDist(X,Stat_agg[1,tt,:],Con_conc[1,tt,:],Para["tmesh"][tt],Para)),
+                                        Stat_conc[1,tt,:])
+    else
+        Dt .= 0.0
+    end
     for kk = 1:Para["nStat_conc"]    
         Dt[kk] = Dt[kk] - Integral(Para["nVintage"],Para["hstep"],F[:,kk])
     end 
@@ -369,7 +373,11 @@ function GradHamiltonian(Stat_conc::Array{Float64,3},
                     Fhelp[jj,ii,:] = ForwardDiff.gradient(X->Hamiltonian(Stat_conc[1,ii,:], Stat_dist[jj,ii,:], Stat_agg[1,ii,:], X, Con_dist[jj,ii,:], 
                                                         CoStat_conc[1,ii,:],CoStat_dist[jj,ii,:],CoStat_agg[1,ii,:], Para["tmesh"][ii],Para["amesh"][jj],Para),Con_conc[1,ii,:])
                 end
-                dHam_conc[1,ii,:] = ForwardDiff.gradient(X -> dot(CoStat_dist[1,ii,:],InitDist(Stat_conc[1,ii,:],Stat_agg[1,ii,:],X,Para["tmesh"][ii],Para)),Con_conc[1,ii,:])
+                if Para["nStat_dist"] > 0
+                    dHam_conc[1,ii,:] = ForwardDiff.gradient(X -> dot(CoStat_dist[1,ii,:],InitDist(Stat_conc[1,ii,:],Stat_agg[1,ii,:],X,Para["tmesh"][ii],Para)),Con_conc[1,ii,:])
+                else
+                    dHam_conc[1,ii,:] .= 0.0
+                end
                 for kk = 1:Para["nCon_conc"]
                     dHam_conc[1,ii,kk] = dHam_conc[1,ii,kk] + Integral(Para["nVintage"],Para["hstep"],Fhelp[:,ii,kk]) 
                 end
@@ -439,7 +447,11 @@ function NewDirection(Stat_conc::Array{Float64,3},
                                                 CoStat_conc[1,ii,:],CoStat_dist[jj,ii,:],CoStat_agg[1,ii,:], Para["tmesh"][ii],Para["amesh"][jj],Para),Con_conc[1,ii,:])
                 end
 
-                Hess2 = ForwardDiff.hessian(X -> dot(CoStat_dist[1,ii,:],InitDist(Stat_conc[1,ii,:],Stat_agg[1,ii,:],X,Para["tmesh"][ii],Para)),Con_conc[1,ii,:])                
+                if Para["nStat_dist"] > 0
+                    Hess2 = ForwardDiff.hessian(X -> dot(CoStat_dist[1,ii,:],InitDist(Stat_conc[1,ii,:],Stat_agg[1,ii,:],X,Para["tmesh"][ii],Para)),Con_conc[1,ii,:])                
+                else
+                    Hess2 = zeros(Para["nCon_conc"],Para["nCon_conc"])
+                end
                 for kk1 = 1:Para["nCon_conc"]
                     for kk2 = 1:Para["nCon_conc"]
                         Hess2[kk1,kk2] = Hess2[kk1,kk2] + Integral(Para["nVintage"],Para["hstep"],Hess[:,kk1,kk2])

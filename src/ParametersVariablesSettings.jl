@@ -198,6 +198,9 @@ function ParametersAlgorithm(Para,UserPara)
     Para2["OptiIter"] = 0
     Para2["HstepIter"] = 0
 
+    Para["GradientSteps"] = 1e-6
+    Para["GradientStepsActive"] = true
+
     for kk in keys(Para2)
         if kk in keys(UserPara)
             Para[kk] = UserPara[kk]
@@ -328,7 +331,7 @@ function InitVariables(Para::Dict)
     
     # Set initial guess for controls as the mean of the upper and lower bound
     for kk = 1:Para["nCon_conc"]
-        if max(-Para["Con_distMin"][kk],Para["Con_distMax"][kk]) < Inf
+        if max(-Para["Con_concMin"][kk],Para["Con_concMax"][kk]) < Inf
             Con_conc[:,:,kk] .= (Para["Con_concMin"][kk] + Para["Con_concMax"][kk])/2
         elseif -Para["Con_concMin"][kk] < Inf
             Con_conc[:,:,kk] .= Para["Con_concMin"][kk] .+ 1.0

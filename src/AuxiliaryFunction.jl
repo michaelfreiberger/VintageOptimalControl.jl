@@ -229,19 +229,21 @@ function ParaAdjust(h_global::Float64,Para::Dict)
 
     Para["OptiIter"] = 1
 
-    InitStat_dist_Help = zeros(Para["nVintage"],1,Para["nStat_dist"])
-    helpgrid = collect(0:(Para["ω"]/(length(Para["InitStat_dist"][:,1,1])-1)):Para["ω"])
-    for jj = 1:Para["nStat_dist"]
-        InitStat_dist_Help[:,1,jj] = evaluate(Spline1D(helpgrid,Para["InitStat_dist"][:,1,jj],k=min(2,length(Para["InitStat_dist"][:,1,jj])-1)),Para["amesh"])
-    end
-    Para["InitStat_dist"] = InitStat_dist_Help
+    if Para["nStat_dist"] > 0
+        InitStat_dist_Help = zeros(Para["nVintage"],1,Para["nStat_dist"])
+        helpgrid = collect(0:(Para["ω"]/(length(Para["InitStat_dist"][:,1,1])-1)):Para["ω"])
+        for jj = 1:Para["nStat_dist"]
+            InitStat_dist_Help[:,1,jj] = evaluate(Spline1D(helpgrid,Para["InitStat_dist"][:,1,jj],k=min(2,length(Para["InitStat_dist"][:,1,jj])-1)),Para["amesh"])
+        end
+        Para["InitStat_dist"] = InitStat_dist_Help
 
-    BoundStat_dist_Help = zeros(1,Para["nTime"],Para["nStat_dist"])
-    helpgrid = collect(0:(Para["T"]/(length(Para["BoundStat_dist"][1,:,1])-1)):Para["T"])
-    for jj = 1:Para["nStat_dist"]
-        BoundStat_dist_Help[1,:,jj] = evaluate(Spline1D(helpgrid,Para["BoundStat_dist"][1,:,jj],k=min(2,length(Para["BoundStat_dist"][1,:,jj])-1)),Para["tmesh"])
+        BoundStat_dist_Help = zeros(1,Para["nTime"],Para["nStat_dist"])
+        helpgrid = collect(0:(Para["T"]/(length(Para["BoundStat_dist"][1,:,1])-1)):Para["T"])
+        for jj = 1:Para["nStat_dist"]
+            BoundStat_dist_Help[1,:,jj] = evaluate(Spline1D(helpgrid,Para["BoundStat_dist"][1,:,jj],k=min(2,length(Para["BoundStat_dist"][1,:,jj])-1)),Para["tmesh"])
+        end
+        Para["BoundStat_dist"] = BoundStat_dist_Help 
     end
-    Para["BoundStat_dist"] = BoundStat_dist_Help 
 end
 
 

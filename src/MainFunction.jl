@@ -25,7 +25,7 @@ function VintageOptimisation(;Results=Dict(),UserParameters=Dict(),
                     StateDynamic_conc_Input = (Sconc,Sagg,Cconc, t::Float64, Para::Dict) -> [], 
                     StateDynamic_dist_Input = (Sconc,Sdist,Sagg,Cconc,Cdist,t::Float64, s::Float64, Para::Dict) -> [],
                     InitDist_Input = (Sconc,Sagg,Cconc, t::Float64, Para::Dict) -> [],
-                    SalvageFunction_Input = (Sconc,Sdist,t::Float64,s::Float64,Para) -> [])
+                    SalvageFunction_Input = (Sconc,Sdist,t::Float64,s::Float64,Para) -> 0.0)
     
     
     # Set up dictionary with all parameters either from the base values or user-specific values
@@ -191,6 +191,7 @@ function VintageOptimisation(;Results=Dict(),UserParameters=Dict(),
             
             # Plot the current results every Para["PlotResultsIntermediateFrequency"] iterations
             if Para["PlotResultsIntermediate"] == true && Para["OptiIter"]%Para["PlotResultsIntermediateFrequency"] == 0
+                costate_PDE_solver(Stat_conc,Stat_dist,Stat_agg,Con_conc,Con_dist,CoStat_conc,CoStat_dist,CoStat_agg,Para)
                 GradHamiltonian(Stat_conc,Stat_dist,Stat_agg,Con_conc,Con_dist,CoStat_conc,CoStat_dist,CoStat_agg,dHam_conc,dHam_dist,Para)
                 NewDirection(Stat_conc,Stat_dist,Stat_agg,Con_conc,Con_dist,CoStat_conc,CoStat_dist,CoStat_agg,dHam_conc,dHam_dist,Para)
                 AssignResults(Results,Stat_conc,Stat_dist,Stat_agg,Con_conc,Con_dist,CoStat_conc,CoStat_dist,CoStat_agg,dHam_conc,dHam_dist,Para)
@@ -217,6 +218,18 @@ function VintageOptimisation(;Results=Dict(),UserParameters=Dict(),
         if Para["PlotResultsIntermediate"]
             PlotResults(Results)
         end
+
+        GradientSteps( Con_conc,Con_dist,dHam_conc,dHam_dist,Para)
+        state_PDE_solver(Stat_conc,Stat_dist, Stat_agg, Con_conc, Con_dist, Para)
+        ObjValue = ObjectValue(Stat_conc,Stat_dist,Stat_agg,Con_conc,Con_dist,Para)
+        costate_PDE_solver(Stat_conc,Stat_dist,Stat_agg,Con_conc,Con_dist,CoStat_conc,CoStat_dist,CoStat_agg,Para)
+        GradHamiltonian(Stat_conc,Stat_dist,Stat_agg,Con_conc,Con_dist,CoStat_conc,CoStat_dist,CoStat_agg,dHam_conc,dHam_dist,Para)
+        NewDirection(Stat_conc,Stat_dist,Stat_agg,Con_conc,Con_dist,CoStat_conc,CoStat_dist,CoStat_agg,dHam_conc,dHam_dist,Para)
+        AssignResults(Results,Stat_conc,Stat_dist,Stat_agg,Con_conc,Con_dist,CoStat_conc,CoStat_dist,CoStat_agg,dHam_conc,dHam_dist,Para)
+        if Para["PlotResultsIntermediate"]
+            PlotResults(Results)
+        end
+
 
         # Decrease/Half the time-step size and reset the iteration counters
         if Para["hstep"]/2 >= Para["hLowBound"]
