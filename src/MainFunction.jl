@@ -219,16 +219,16 @@ function VintageOptimisation(;Results=Dict(),UserParameters=Dict(),
             PlotResults(Results)
         end
 
-        GradientSteps( Con_conc,Con_dist,dHam_conc,dHam_dist,Para)
-        state_PDE_solver(Stat_conc,Stat_dist, Stat_agg, Con_conc, Con_dist, Para)
-        ObjValue = ObjectValue(Stat_conc,Stat_dist,Stat_agg,Con_conc,Con_dist,Para)
-        costate_PDE_solver(Stat_conc,Stat_dist,Stat_agg,Con_conc,Con_dist,CoStat_conc,CoStat_dist,CoStat_agg,Para)
-        GradHamiltonian(Stat_conc,Stat_dist,Stat_agg,Con_conc,Con_dist,CoStat_conc,CoStat_dist,CoStat_agg,dHam_conc,dHam_dist,Para)
-        NewDirection(Stat_conc,Stat_dist,Stat_agg,Con_conc,Con_dist,CoStat_conc,CoStat_dist,CoStat_agg,dHam_conc,dHam_dist,Para)
-        AssignResults(Results,Stat_conc,Stat_dist,Stat_agg,Con_conc,Con_dist,CoStat_conc,CoStat_dist,CoStat_agg,dHam_conc,dHam_dist,Para)
-        if Para["PlotResultsIntermediate"]
-            PlotResults(Results)
-        end
+        # GradientSteps( Con_conc,Con_dist,dHam_conc,dHam_dist,Para)
+        # state_PDE_solver(Stat_conc,Stat_dist, Stat_agg, Con_conc, Con_dist, Para)
+        # ObjValue = ObjectValue(Stat_conc,Stat_dist,Stat_agg,Con_conc,Con_dist,Para)
+        # costate_PDE_solver(Stat_conc,Stat_dist,Stat_agg,Con_conc,Con_dist,CoStat_conc,CoStat_dist,CoStat_agg,Para)
+        # GradHamiltonian(Stat_conc,Stat_dist,Stat_agg,Con_conc,Con_dist,CoStat_conc,CoStat_dist,CoStat_agg,dHam_conc,dHam_dist,Para)
+        # NewDirection(Stat_conc,Stat_dist,Stat_agg,Con_conc,Con_dist,CoStat_conc,CoStat_dist,CoStat_agg,dHam_conc,dHam_dist,Para)
+        # AssignResults(Results,Stat_conc,Stat_dist,Stat_agg,Con_conc,Con_dist,CoStat_conc,CoStat_dist,CoStat_agg,dHam_conc,dHam_dist,Para)
+        # if Para["PlotResultsIntermediate"]
+        #     PlotResults(Results)
+        # end
 
 
         # Decrease/Half the time-step size and reset the iteration counters
